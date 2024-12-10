@@ -7,26 +7,26 @@ const key = crypto.createHash('sha256').update(String(process.env.CRYPTO_SECRET)
 const iv = crypto.randomBytes(16); // Vetor de inicialização de 16 bytes
 
 if (!process.env.CRYPTO_SECRET) {
-    throw new Error('CRYPTO_SECRET NÃO CONFIGURADA! FAVOR CONFIGURE NO .ENV PARA CONTINUAR.');
+  throw new Error('CRYPTO_SECRET NÃO CONFIGURADA! FAVOR CONFIGURE NO .ENV PARA CONTINUAR.');
 }
 
 // Função para criptografar
 const encrypt = (text) => {
-    const cipher = crypto.createCipheriv(algorithm, key, iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return {
-        encryptedData: encrypted,
-        iv: iv.toString('hex')
-    };
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return {
+    encryptedData: encrypted,
+    iv: iv.toString('hex')
+  };
 }
 
 // Função para descriptografar
 const decrypt = (encryptedData, iv) => {
-    const decipher = crypto.createDecipheriv(algorithm, key, Buffer.from(iv, 'hex'));
-    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+  const decipher = crypto.createDecipheriv(algorithm, key, Buffer.from(iv, 'hex'));
+  let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
 }
 
 // // Exemplo de uso
@@ -47,11 +47,11 @@ const decrypt = (encryptedData, iv) => {
  * @returns {Object} - Objeto com campos e mensagens de erro formatados
  */
 export function formatZodErrors(error) {
-    if (error instanceof ZodError) {
-        return error.errors.map((e) => ({
-            field: e.path.join('.'), // Une os caminhos do campo em uma string
-            message: e.message,     // Mensagem descritiva do erro
-        }));
-    }
-    return [{ message: "Erro desconhecido." }];
+  if (error instanceof ZodError) {
+    return error.errors.map((e) => ({
+      field: e.path.join('.'), // Une os caminhos do campo em uma string
+      message: e.message,     // Mensagem descritiva do erro
+    }));
+  }
+  return [{ message: "Erro desconhecido." }];
 }
