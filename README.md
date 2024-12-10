@@ -24,7 +24,7 @@ Se localizar o usuário vou gerar um JWT encodando as seguintes informações:
 
 `protocolo_atendimento -> Será passado no Body`
 
-Esse JWT expirará em 24 horas, e ele será a informação principal para gerar a URL de avaliação pois será via GET params, exemplo:
+Esse JWT expirará em 24 horas, e ele será a informação principal para gerar a URL de avaliação pois será via ROUTE PARAMS, exemplo:
 
 `https://avalia-me/{JWT}`
 
