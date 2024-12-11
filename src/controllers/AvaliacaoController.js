@@ -1,9 +1,19 @@
 import { logger } from '../logger/index.js';
 import AvaliacaoModel from '../models/AvaliacaoModel.js'; // Importando o modelo de avaliação
+import { createAvaliacaoSchema, verifyAvaliacaoSchema } from '../schemas/avaliacao/index.js'; // Importando os schemas
 
 class AvaliacaoController {
   async create(req, res) {
     const { nome_atendente, nome_empresa, protocolo } = req.body;
+
+    // Validando os dados de entrada com Zod
+    const validationResult = createAvaliacaoSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        message: "Erro de validação",
+        errors: validationResult.error.errors,
+      });
+    }
 
     try {
       // Criar avaliação através do AvaliacaoModel
@@ -20,7 +30,16 @@ class AvaliacaoController {
 
   async verify(req, res) {
     const { uuid } = req.params;
-    const { token } = req.body;  // O token será enviado no corpo da requisição
+    const { token } = req.body;
+
+    // Validando os dados de entrada com Zod
+    const validationResult = verifyAvaliacaoSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        message: "Erro de validação",
+        errors: validationResult.error.errors,
+      });
+    }
 
     try {
       // Verificar a validade do UUID e do token

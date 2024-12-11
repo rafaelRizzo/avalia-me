@@ -2,33 +2,17 @@ Sistema de avaliação
 
 Esse sistema de avaliação está sendo feito sob uma demanda interna da empresa e estará de livre uso sob a LICENÇA MIT, basta clonar o repositório e fazer a configuração do lado do seu servidor.
 
-Fluxograma base:
+Tecnologias utilizadas:
+NODEJS, REDIS, MYSQL, JWT, UUID, EXPRESS
 
-<img src="./public/fluxograma.png" width="500"/>
+ESTRUTURA DAS PASTAS: 
+MODELO MVC
 
-Para o auth, deve ser passado o id único(id_avaliacao) no Headers Auth Bearer que é gerado na criação de um usuário pelo back que estará criptografado, estará salvo na tabela de usuários.
+MODEL -> CONTROLA A ACESSO AOS DADOS DO BANCO DE DADOS E LOGICAS MAIS COMPLEXAS (BAIXO NIVEL)
+VIEW -> ROTAS DA API
+CONTROLLER -> MODELO DO NEGOCIO, LOGICAS, BUSINESS, VALIDAÇÕES, ETC
 
-Se localizar o usuário vou gerar um JWT encodando as seguintes informações:
-
-`id_atendente -> Pego na tabela`
-
-`nome_atendente -> Pego na tabela`
-
-`id_avaliacao -> Pego na tabela`
-
-`empresa -> Será passado no Body`
-
-`protocolo_atendimento -> Será passado no Body`
-
-Esse JWT expirará em 24 horas, e ele será a informação principal para gerar a URL de avaliação pois será via ROUTE PARAMS, exemplo:
-
-`https://avalia-me/{JWT}`
-
-Todos os JWT’s serão armazenados em uma outra tabela que fará FK com as tabela de avaliações, assim que ele for expirado, automaticamente será deletada do banco de dados (rodará a cada 1 hora já que o token é valido por 1 dia).
-
-Sobre o INSERT da nota imagino que já pegou como vai funcionar, vou mandar o JWT e como meu servidor tem a chave para descriptografar consigo pegar os dados encodados e dar o update com as informações na tabela de avaliações.
-
-Estrutuda do banco:
+Estutura do banco:
 
 CREATE DATABASE sistema_avaliacao;
 
