@@ -1,9 +1,5 @@
 Sistema de avaliação
 
-Funcionamento resumido: Será feito o back na branch main e o front-end na branch front, o sistema será gerador de Link com um JWT expirável na URL, através desse JWT será inserido a avaliação no banco de dados, a authenticação para gerar um Link será atraves de um campo na tabela de usuarios, que é denominado id_avaliacao, caso quem esteja fazendo a requisição para gerar o Link de uma avaliação será validado se existe o id passado no banco e será gerado com os dados fundamentas para a inserção, encondando no JWT.
-
-Será um CREATE E READ simples mas bem estruturado e com um pequeno painel ADMIN para cada empresa e um ADMIN.
-
 Esse sistema de avaliação está sendo feito sob uma demanda interna da empresa e estará de livre uso sob a LICENÇA MIT, basta clonar o repositório e fazer a configuração do lado do seu servidor.
 
 Fluxograma base:
@@ -38,25 +34,6 @@ CREATE DATABASE sistema_avaliacao;
 
 USE sistema_avaliacao;
 
-CREATE TABLE atendente (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255),
-    id_avaliacao VARCHAR(255) NOT NULL,
-    status ENUM('ativo', 'inativo') DEFAULT 'ativo',
-    data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    jwt TEXT DEFAULT NULL,
-    empresa_contrato INT NOT NULL,
-    role ENUM('admin', 'client') DEFAULT 'client',
-    status ENUM('ativo', 'inativo') DEFAULT 'ativo',
-    data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE avaliacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(255) NOT NULL,
@@ -74,13 +51,6 @@ CREATE TABLE avaliacoes (
     data_ultima_alteracao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TABLE avaliacoes_pendentes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    jwt TEXT NOT NULL,
-    data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 
 @ Dev Full Stack ASTERISK | NEXTJS | NODEJS | MYSQL ~  Rafael Rizzo Breschi
 
