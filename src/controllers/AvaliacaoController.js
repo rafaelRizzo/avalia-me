@@ -1,76 +1,59 @@
-import 'dotenv/config';
-import { logger } from './../logger/index.js';
-import db from './../config/db.js';
-import { v7 as uuid } from 'uuid';
-import jwt, { decode } from 'jsonwebtoken';
-
-// Cliente irá acessar o site e vai passar o jwt na url automaticamente, depois de ter passado o NEXTJS vai ter uma req server side para validar se o token ainda é valido e não já não foi respondida, só assim ela vai ser renderizada para o cliente, a url irá mudar do jwt para o uuid da avaliação para que não seja possivel acessar a url direto, evitando fraudes.
-// A url da avaliação é gerada pelo servidor e não pelo cliente, pois o cliente não tem acesso ao servidor, então o servidor gera a url e envia para o cliente.
+import { logger } from '../logger/index.js';
+import AvaliacaoModel from '../models/AvaliacaoModel.js'; // Importando o modelo de avaliação
 
 class AvaliacaoController {
-    async generate(req, res) {
+  async create(req, res) {
+    const { nome_atendente, nome_empresa, protocolo } = req.body;
 
-        const { nome_atendente, nome_empresa, protocolo } = req.body;
+    try {
+      // Criar avaliação através do AvaliacaoModel
+      const { uuid_generated, token } = await AvaliacaoModel.createAvaliacao({ nome_atendente, nome_empresa, protocolo });
 
-        // Gerando um ID unico para a avaliação
-        const uuid_generated = uuid();
+      // Enviar resposta com UUID gerado e o token
+      res.json({ uuid_generated, token });
 
-        const data_sign = {
-            uuid_generated,
-            nome_atendente,
-            nome_empresa,
-            protocolo,
-        }
-
-        try {
-            const token = jwt.sign(data_sign, process.env.JWT_SECRET, {
-                expiresIn: process.env.JWT_EXPIRES
-            });
-
-            logger.info(`Token gerado com sucesso: ${token}`);
-
-            logger.info(`Dados decoded do token: ${JSON.stringify(jwt.decode(token))}`);
-        } catch (error) {
-            logger.error(`Erro ao gerar token de acesso: ${error}`);
-        }
-
+    } catch (error) {
+      logger.error(`Erro ao gerar avaliação: ${error}`);
+      res.status(500).json('Erro ao gerar a avaliação');
     }
+  }
 
-    async insertAvaliacao(req, res) {
-        logger.info('Um cliente respondeu a uma avaliação');
-        const { uuid } = req.body;
-        let jwt = req.headers.authorization;
-        jwt = jwt.replace('Bearer ', '');
+  async verify(req, res) {
+    const { uuid } = req.params;
+    const { token } = req.body;  // O token será enviado no corpo da requisição
 
+    try {
+      // Verificar a validade do UUID e do token
+      const { valid, message } = await AvaliacaoModel.verifyTokenAndUUID(uuid, token);
 
-        logger.info(`Token recebido: ${token}`)
-        logger.info(`UUID recebido: ${uuid_body}`)
+      if (!valid) {
+        return res.status(400).json(message);
+      }
 
-        logger.info('Decodificando token...');
-        try {
-            const decoded = jwt.decode(token);
+      return res.status(200).json(message);
 
-            logger.info('Token decodificado.');
-
-            // acessar o uuid_generated dentro do token decoded
-            const uuid_generated = decoded.uuid_generated;
-
-            // comparar o uuid_body com o uuid_generated
-            logger.info('Comparando uuid com o token...');
-            if (uuid_body !== uuid_generated) {
-                logger.warn('uuid inválido');
-            } else {
-                logger.info('uuid válido continunando...');
-                logger.info('Inserindo avaliação no banco de dados...');
-
-                logger.info('Inserção  concluída!');;
-            }
-        } catch (error) {
-            logger.error(`Erro ao decodificar token: ${error}`);
-        }
+    } catch (error) {
+      logger.error(`Erro ao verificar avaliação: ${error}`);
+      res.status(500).json('Erro ao verificar avaliação');
     }
+  }
+
+  async listValidUUID(req, res) {
+    try {
+      // Listar UUIDs válidos
+      const { validData, message } = await AvaliacaoModel.listValidUUIDs();
+
+      if (validData.length === 0) {
+        return res.status(200).json(message);
+      }
+
+      return res.status(200).json(validData);
+
+    } catch (error) {
+      logger.error(`Erro ao listar UUIDs válidos: ${error}`);
+      res.status(500).json('Erro ao listar UUIDs');
+    }
+  }
 }
 
-let teste = new AvaliacaoController();
-teste.insertAvaliacao();
-// export default new AvaliacaoController();
+export default new AvaliacaoController();  // Exporta a instância já criada
