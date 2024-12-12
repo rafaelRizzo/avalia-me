@@ -93,6 +93,22 @@ class AvaliacaoModel {
     const [rows] = await pool.execute(sql, params);
     return rows;
   }
+
+  async atualizarAvaliacao(uuid, dados) {
+    const { nota_atendimento, nota_empresa, ip_client, obs } = dados;
+
+    // Atualizar avaliação no banco
+    const sql = `
+      UPDATE avaliacoes
+      SET nota_atendimento = ?, nota_empresa = ?, ip_client = ?, obs = ?, status = ?, jwt = null
+      WHERE uuid = ?
+    `;
+
+    const params = [nota_atendimento, nota_empresa, ip_client, obs, 'avaliado', uuid];
+
+    const [result] = await pool.execute(sql, params);
+    return result;
+  }
 }
 
 export default new AvaliacaoModel();

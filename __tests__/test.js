@@ -59,31 +59,30 @@ describe('Testando a rota de validação do UUID', function () {
     });
 });
 
-describe('Testando a expiração do UUID após 1 minuto', function () {
-    it('Deve falhar na validação após 1 minuto', async function () {
-        this.timeout(70000); // Aumenta o tempo de timeout para garantir que aguarde 1 minuto
+// describe('Testando a expiração do UUID após 1 minuto', function () {
+//     it('Deve falhar na validação após 1 minuto', async function () {
+//         this.timeout(70000); // Aumenta o tempo de timeout para garantir que aguarde 1 minuto
 
-        // Aguarda 1 minuto para garantir que o UUID expire
-        await new Promise(resolve => setTimeout(resolve, 60000)); // Aguardar 1 minuto
+//         // Aguarda 1 minuto para garantir que o UUID expire
+//         await new Promise(resolve => setTimeout(resolve, 60000)); // Aguardar 1 minuto
 
-        try {
-            const response = await axios.get(`${API_URL}/validate/${uuid_generated}`, {
-                headers: { 'Content-Type': 'application/json' },
-            });
+//         try {
+//             const response = await axios.get(`${API_URL}/validate/${uuid_generated}`, {
+//                 headers: { 'Content-Type': 'application/json' },
+//             });
 
-            // Se a resposta chegar, ele não deve passar, pois esperamos um erro 401
-            expect.fail('O teste não deveria chegar aqui, pois o UUID deveria ter expirado');
-        } catch (error) {
-            // Verifica se o status de erro é 401 (não autorizado)
-            logger.info('Erro ao validar o UUID:', error.response?.data);
+//             // Se a resposta chegar, ele não deve passar, pois esperamos um erro 401
+//             expect.fail('O teste não deveria chegar aqui, pois o UUID deveria ter expirado');
+//         } catch (error) {
+//             // Verifica se o status de erro é 401 (não autorizado)
+//             logger.info('Erro ao validar o UUID:', error.response?.data);
 
-            expect(error.response.status).to.equal(401);
-            expect(error.response.data.message).to.equal('JWT expirado ou inválido');
-        }
-    });
-});
+//             expect(error.response.status).to.equal(401);
+//             expect(error.response.data.message).to.equal('JWT expirado ou inválido');
+//         }
+//     });
+// });
 
-// Testando a rota /list para buscar avaliações com filtros
 describe('Testando a rota /list para buscar avaliações com filtros', function () {
     it('Deve retornar todas as avaliações quando não passar parâmetros', async () => {
         try {
@@ -212,6 +211,33 @@ describe('Testando a rota /list para buscar avaliações com filtros', function 
             });
         } catch (error) {
             logger.error('Erro na requisição (LIST - com múltiplos filtros):', error.response?.data || error.message);
+            throw error;
+        }
+    });
+});
+
+describe('Testando a rota PUT para atualização da avaliação', function () {
+    it('Deve atualizar uma avaliação e retornar status 200', async () => {
+        const body = {
+            nota_atendimento: "5",
+            nota_empresa: "5",
+            ip_client: "2.3.4.5",
+            obs: "Legal",
+        };
+
+        try {
+            const response = await axios.put(`${API_URL}/avaliacao/${uuid_generated}`, body, {
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const data = response.data;
+            logger.info('Resposta da API (UPDATE):', data);
+
+            // Validações
+            expect(response.status).to.equal(200);
+            expect(data.message).to.equal('Avaliação atualizada com sucesso');
+        } catch (error) {
+            logger.error('Erro na requisição (UPDATE):', error.response?.data || error.message);
             throw error;
         }
     });

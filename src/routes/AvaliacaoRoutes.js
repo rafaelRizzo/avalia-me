@@ -12,4 +12,7 @@ router.get('/validate/:uuid', AvaliacaoController.validarJWT);
 // Rota para listar avaliações com filtros
 router.get('/list', AvaliacaoController.listarAvaliacoes);
 
+// Rota para atualizar avaliação
+router.put('/avaliacao/:uuid', AvaliacaoController.atualizarAvaliacao);
+
 export default router;

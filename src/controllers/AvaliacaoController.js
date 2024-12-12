@@ -77,6 +77,34 @@ class AvaliacaoController {
       res.status(500).json({ message: 'Erro ao listar avaliações', error: error.message });
     }
   }
+
+  async atualizarAvaliacao(req, res) {
+    try {
+      const { uuid } = req.params; // UUID da avaliação a ser atualizada
+      const { nota_atendimento, nota_empresa, ip_client, obs } = req.body; // Dados a serem atualizados
+
+      // Verificar se a avaliação existe
+      const avaliacaoExistente = await AvaliacaoModel.buscarPorUUID(uuid);
+      if (!avaliacaoExistente) {
+        return res.status(404).json({ message: 'Avaliação não encontrada' });
+      }
+
+      // Atualizar avaliação no banco
+      const dadosAtualizados = { nota_atendimento, nota_empresa, ip_client, obs };
+
+      await AvaliacaoModel.atualizarAvaliacao(uuid, dadosAtualizados);
+
+      res.status(200).json({ message: 'Avaliação atualizada com sucesso' });
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(error);
+      } else {
+        console.error(error.message);
+      }
+      res.status(500).json({ message: 'Erro ao atualizar avaliação', error: error.message });
+    }
+  }
+
 }
 
 export default new AvaliacaoController();
