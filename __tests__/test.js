@@ -23,10 +23,9 @@ describe('Testando a rota CREATE para avaliação', function () {
             });
 
             const data = response.data;
-            // logger.info('Resposta da API (CREATE):', data);
+            logger.info('Resposta da API (CREATE):', data);
 
             uuid_generated = data.uuid; // Armazena o UUID para uso posterior
-            logger.info('UUID gerado:', uuid_generated);
 
             // Validações
             expect(response.status).to.equal(201);
@@ -47,7 +46,7 @@ describe('Testando a rota de validação do UUID', function () {
             });
 
             const data = response.data;
-            // logger.info('Resposta da API (VALIDATE):', data);
+            logger.info('Resposta da API (VALIDATE):', data);
 
             // Validações
             expect(response.status).to.equal(200);
@@ -60,29 +59,29 @@ describe('Testando a rota de validação do UUID', function () {
     });
 });
 
-// describe('Testando a expiração do UUID após 1 minuto', function () {
-//     it('Deve falhar na validação após 1 minuto', async function () {
-//         this.timeout(70000); // Aumenta o tempo de timeout para garantir que aguarde 1 minuto
+describe('Testando a expiração do UUID após 1 minuto', function () {
+    it('Deve falhar na validação após 1 minuto', async function () {
+        this.timeout(70000); // Aumenta o tempo de timeout para garantir que aguarde 1 minuto
 
-//         // Aguarda 1 minuto para garantir que o UUID expire
-//         await new Promise(resolve => setTimeout(resolve, 60000)); // Aguardar 1 minuto
+        // Aguarda 1 minuto para garantir que o UUID expire
+        await new Promise(resolve => setTimeout(resolve, 60000)); // Aguardar 1 minuto
 
-//         try {
-//             const response = await axios.get(`${API_URL}/validate/${uuid_generated}`, {
-//                 headers: { 'Content-Type': 'application/json' },
-//             });
+        try {
+            const response = await axios.get(`${API_URL}/validate/${uuid_generated}`, {
+                headers: { 'Content-Type': 'application/json' },
+            });
 
-//             // Se a resposta chegar, ele não deve passar, pois esperamos um erro 401
-//             expect.fail('O teste não deveria chegar aqui, pois o UUID deveria ter expirado');
-//         } catch (error) {
-//             // Verifica se o status de erro é 401 (não autorizado)
-//             logger.info('Erro ao validar o UUID:', error.response?.data);
+            // Se a resposta chegar, ele não deve passar, pois esperamos um erro 401
+            expect.fail('O teste não deveria chegar aqui, pois o UUID deveria ter expirado');
+        } catch (error) {
+            // Verifica se o status de erro é 401 (não autorizado)
+            logger.info('Erro ao validar o UUID:', error.response?.data);
 
-//             expect(error.response.status).to.equal(401);
-//             expect(error.response.data.message).to.equal('JWT expirado ou inválido');
-//         }
-//     });
-// });
+            expect(error.response.status).to.equal(401);
+            expect(error.response.data.message).to.equal('JWT expirado ou inválido');
+        }
+    });
+});
 
 // Testando a rota /list para buscar avaliações com filtros
 describe('Testando a rota /list para buscar avaliações com filtros', function () {
