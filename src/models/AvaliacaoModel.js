@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { logger } from '../logger/index.js';
 import JWTManager from '../utils/JWTManager.js';
 
 class AvaliacaoModel {
@@ -34,9 +35,9 @@ class AvaliacaoModel {
     if (!avaliacao) {
       throw new Error('Avaliação não encontrada');
     }
-    console.log(`Avaliação localizada: ${avaliacao.nome_atendente}, ${avaliacao.nome_empresa}, ${avaliacao.protocolo_atendimento}`);
+    logger.info(`Avaliação localizada: ${avaliacao.nome_atendente}, ${avaliacao.nome_empresa}, ${avaliacao.protocolo_atendimento}`);
 
-    console.log('Status da avaliação:', avaliacao.status); // Log para verificar o status
+    logger.info('Status da avaliação:', avaliacao.status); // Log para verificar o status
 
     // Validar JWT usando o JWTManager
     try {
@@ -47,10 +48,10 @@ class AvaliacaoModel {
     } catch (error) {
       // Se o JWT estiver expirado e o status for 'pendente', atualize o status
       if (error.message === 'JWT expirado' && avaliacao.status === 'pendente') {
-        console.log("Atualizando status para expirado.");
+        logger.info("Atualizando status para expirado.");
         const sql = `UPDATE avaliacoes SET status = 'expirado', jwt = null WHERE uuid = ?`;
         await pool.execute(sql, [uuid]);
-        console.log('Status atualizado para expirado');
+        logger.info('Status atualizado para expirado');
       }
       throw new Error('JWT expirado ou inválido');
     }

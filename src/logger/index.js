@@ -1,21 +1,17 @@
-import winston from "winston";
+import winston from 'winston';
 
-// Configuração do logger
 export const logger = winston.createLogger({
-  level: "info", // Nível de log padrão
-  format: winston.format.json(), // Formato de log
-  defaultMeta: { service: "avaliacao-service" }, // Metadata para os logs
+  level: process.env.DEBUG_STATUS === 'production' ? 'error' : 'info',
+  format: winston.format.json(),
+  defaultMeta: { service: 'avaliacao-service' },
   transports: [
-    new winston.transports.File({ filename: "error.log", level: "error" }), // Logs de erro
-    new winston.transports.File({ filename: "combined.log" }), // Logs gerais
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log', level: 'info' }),
   ],
 });
 
-// Se não for em produção, adicionar o transporte para o console
-if (process.env.NODE_ENV !== "production") {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.simple(), // Formato simples no console
-    })
-  );
+if (process.env.DEBUG_STATUS !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
 }
