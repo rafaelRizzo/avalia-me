@@ -83,18 +83,25 @@ class AvaliacaoController {
       const { uuid } = req.params; // UUID da avaliação a ser atualizada
       const { nota_atendimento, nota_empresa, ip_client, obs } = req.body; // Dados a serem atualizados
 
-      // Verificar se a avaliação existe
-      const avaliacaoExistente = await AvaliacaoModel.buscarPorUUID(uuid);
-      if (!avaliacaoExistente) {
-        return res.status(404).json({ message: 'Avaliação não encontrada' });
+      // Validar JWT no model
+      try {
+        await AvaliacaoModel.validarJWT(uuid);
+
+        // Verificar se a avaliação existe
+        const avaliacaoExistente = await AvaliacaoModel.buscarPorUUID(uuid);
+        if (!avaliacaoExistente) {
+          return res.status(404).json({ message: 'Avaliação não encontrada' });
+        }
+
+        // Atualizar avaliação no banco
+        const dadosAtualizados = { nota_atendimento, nota_empresa, ip_client, obs };
+
+        await AvaliacaoModel.atualizarAvaliacao(uuid, dadosAtualizados);
+
+        res.status(200).json({ message: 'Avaliação atualizada com sucesso' });
+      } catch (error) {
+        return res.status(401).json({ message: 'JWT expirado ou inválido' });
       }
-
-      // Atualizar avaliação no banco
-      const dadosAtualizados = { nota_atendimento, nota_empresa, ip_client, obs };
-
-      await AvaliacaoModel.atualizarAvaliacao(uuid, dadosAtualizados);
-
-      res.status(200).json({ message: 'Avaliação atualizada com sucesso' });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error(error);
