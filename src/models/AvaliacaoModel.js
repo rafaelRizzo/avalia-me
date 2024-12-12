@@ -1,94 +1,97 @@
-import { v7 as uuid } from 'uuid';
-import TokenModel from './TokenModel.js'; // Para a geração e verificação de token
-import RedisModel from './RedisModel.js'; // Para a interação com Redis
-import { logger } from '../logger/index.js';
+import pool from '../config/db.js';
+import JWTManager from '../utils/JWTManager.js';
 
 class AvaliacaoModel {
-  static async createAvaliacao({ nome_atendente, nome_empresa, protocolo }) {
-    const uuid_generated = uuid();  // Gerar UUID único para a avaliação
+  async criarAvaliacao(dados) {
+    const sql = `
+      INSERT INTO avaliacoes (
+          uuid, nome_atendente, nome_empresa, 
+          ip_generated, jwt, protocolo_atendimento
+      ) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const { uuid, nome_atendente, nome_empresa, ip_generated, protocolo_atendimento } = dados;
 
-    const data_sign = {
-      uuid_generated,
-      nome_atendente,
-      nome_empresa,
-      protocolo,
-    };
+    // Criar o JWT usando a classe JWTManager
+    const token = JWTManager.criarToken({ uuid, nome_atendente, nome_empresa, protocolo_atendimento });
 
+    const [result] = await pool.execute(sql, [
+      uuid, nome_atendente, nome_empresa, ip_generated, token, protocolo_atendimento,
+    ]);
+
+    return result;
+  }
+
+  async buscarPorUUID(uuid) {
+    const sql = `SELECT * FROM avaliacoes WHERE uuid = ?`;
+    const [rows] = await pool.execute(sql, [uuid]);
+    return rows[0]; // Retorna o primeiro registro encontrado
+  }
+
+  async validarJWT(uuid) {
+    const avaliacao = await this.buscarPorUUID(uuid);
+
+    if (!avaliacao) {
+      throw new Error('Avaliação não encontrada');
+    }
+    console.log(`Avaliação localizada: ${avaliacao.nome_atendente}, ${avaliacao.nome_empresa}, ${avaliacao.protocolo_atendimento}`);
+
+    console.log('Status da avaliação:', avaliacao.status); // Log para verificar o status
+
+    // Validar JWT usando o JWTManager
     try {
-      // Gerar o token JWT
-      const token = TokenModel.generate(data_sign);
+      const decoded = await JWTManager.validarToken(avaliacao.jwt);
 
-      const dataToStore = {
-        uuid: uuid_generated,
-        token: token
-      };
-
-      // Armazenar UUID e Token no Redis com expiração de 60 segundos
-      await RedisModel.setEx(uuid_generated, 60, dataToStore);
-
-      // Retornar os dados da avaliação criada
-      return { uuid_generated, token };
+      // Se o JWT for válido, retornamos o decodificado
+      return decoded;
     } catch (error) {
-      logger.error(`Erro ao criar avaliação: ${error}`);
-      throw new Error('Erro ao criar a avaliação');
+      // Se o JWT estiver expirado e o status for 'pendente', atualize o status
+      if (error.message === 'JWT expirado' && avaliacao.status === 'pendente') {
+        console.log("Atualizando status para expirado.");
+        const sql = `UPDATE avaliacoes SET status = 'expirado', jwt = null WHERE uuid = ?`;
+        await pool.execute(sql, [uuid]);
+        console.log('Status atualizado para expirado');
+      }
+      throw new Error('JWT expirado ou inválido');
     }
   }
 
-  static async verifyTokenAndUUID(uuid, token) {
-    try {
-      // Recuperar os dados armazenados no Redis
-      const storedData = await RedisModel.get(uuid);
-      if (!storedData) {
-        logger.warn('UUID não encontrado ou expirado');
-        return { valid: false, message: 'UUID inválido ou expirado' };
-      }
+  async listarAvaliacoes(filtros = {}) {
+    const { data_inicial, data_final, status, nome_atendente, nome_empresa } = filtros;
 
-      // Verificar se o token é válido
-      if (!TokenModel.verify(token)) {
-        logger.warn('Token inválido');
-        return { valid: false, message: 'Token inválido' };
-      }
+    let sql = 'SELECT * FROM avaliacoes WHERE 1=1';
+    const params = [];
 
-      // Verificar se o UUID no Redis corresponde ao UUID passado
-      if (uuid !== storedData.uuid) {
-        logger.warn('UUID não corresponde ao UUID no token');
-        return { valid: false, message: 'UUID inválido' };
-      }
-
-      return { valid: true, message: 'UUID e token válidos' };
-    } catch (err) {
-      logger.error('Erro ao verificar UUID e token:', err);
-      return { valid: false, message: 'Erro ao verificar UUID e token' };
+    if (data_inicial) {
+      sql += ' AND data_criacao >= ?';
+      params.push(data_inicial);
     }
-  }
 
-  static async listValidUUIDs() {
-    try {
-      // Recuperar todas as chaves armazenadas no Redis
-      const keys = await RedisModel.keys('*');
-      if (keys.length === 0) {
-        return { validData: [], message: 'Nenhum UUID encontrado no Redis.' };
-      }
-
-      const validData = [];
-
-      // Verificar a validade de cada UUID
-      for (let key of keys) {
-        const storedData = await RedisModel.get(key);
-        if (!storedData) continue;
-
-        const { token, uuid: storedUuid } = storedData;
-        if (TokenModel.verify(token) && key === storedUuid) {
-          validData.push(storedData);
-        }
-      }
-
-      return { validData, message: validData.length > 0 ? 'UUIDs válidos encontrados.' : 'Nenhum UUID válido encontrado.' };
-    } catch (err) {
-      logger.error('Erro ao listar UUIDs no Redis:', err);
-      return { validData: [], message: 'Erro ao listar UUIDs' };
+    if (data_final) {
+      sql += ' AND data_criacao <= ?';
+      params.push(data_final);
     }
+
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+
+    if (nome_atendente) {
+      sql += ' AND nome_atendente LIKE ?';
+      params.push(`%${nome_atendente}%`);
+    }
+
+    if (nome_empresa) {
+      sql += ' AND nome_empresa LIKE ?';
+      params.push(`%${nome_empresa}%`);
+    }
+
+    sql += ' ORDER BY data_criacao DESC'; // Ordena pela data de criação, da mais recente para a mais antiga
+
+    const [rows] = await pool.execute(sql, params);
+    return rows;
   }
 }
 
-export default AvaliacaoModel;
+export default new AvaliacaoModel();

@@ -1,78 +1,82 @@
-import { logger } from '../logger/index.js';
-import AvaliacaoModel from '../models/AvaliacaoModel.js'; // Importando o modelo de avaliação
-import { createAvaliacaoSchema, verifyAvaliacaoSchema } from '../schemas/avaliacao/index.js'; // Importando os schemas
+import AvaliacaoModel from '../models/AvaliacaoModel.js';
+import { v7 as uuidv7 } from 'uuid';
 
 class AvaliacaoController {
-  async create(req, res) {
-    const { nome_atendente, nome_empresa, protocolo } = req.body;
-
-    // Validando os dados de entrada com Zod
-    const validationResult = createAvaliacaoSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({
-        message: "Erro de validação",
-        errors: validationResult.error.errors,
-      });
-    }
-
+  async criarAvaliacao(req, res) {
     try {
-      // Criar avaliação através do AvaliacaoModel
-      const { uuid_generated, token } = await AvaliacaoModel.createAvaliacao({ nome_atendente, nome_empresa, protocolo });
+      const { nome_atendente, nome_empresa, ip_generated, protocolo_atendimento } = req.body;
 
-      // Enviar resposta com UUID gerado e o token
-      res.json({ uuid_generated, token });
+      // Gerar UUID
+      const uuid = uuidv7();
 
+      // Criar avaliação no banco
+      const avaliacao = {
+        uuid, nome_atendente, nome_empresa, ip_generated, protocolo_atendimento,
+      };
+
+      await AvaliacaoModel.criarAvaliacao(avaliacao);
+
+      res.status(201).json({
+        message: 'Avaliação criada com sucesso',
+        uuid,
+      });
     } catch (error) {
-      logger.error(`Erro ao gerar avaliação: ${error}`);
-      res.status(500).json('Erro ao gerar a avaliação');
+      // Log detalhado apenas para desenvolvedores (em ambiente de desenvolvimento)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(error);  // Loga o erro completo no console, incluindo stack trace
+      } else {
+        console.error(error.message); // Loga apenas a mensagem simples no console
+      }
+      res.status(500).json({ message: 'Erro ao criar avaliação', error: error.message });
     }
   }
 
-  async verify(req, res) {
-    const { uuid } = req.params;
-    const { token } = req.body;
-
-    // Validando os dados de entrada com Zod
-    const validationResult = verifyAvaliacaoSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({
-        message: "Erro de validação",
-        errors: validationResult.error.errors,
-      });
-    }
-
+  async validarJWT(req, res) {
     try {
-      // Verificar a validade do UUID e do token
-      const { valid, message } = await AvaliacaoModel.verifyTokenAndUUID(uuid, token);
+      const { uuid } = req.params;
 
-      if (!valid) {
-        return res.status(400).json(message);
-      }
+      // Validar JWT no model
+      const decoded = await AvaliacaoModel.validarJWT(uuid);
 
-      return res.status(200).json(message);
-
+      res.status(200).json({ message: 'JWT válido', decoded });
     } catch (error) {
-      logger.error(`Erro ao verificar avaliação: ${error}`);
-      res.status(500).json('Erro ao verificar avaliação');
+      // Log detalhado apenas para desenvolvedores (em ambiente de desenvolvimento)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(error);  // Loga o erro completo no console, incluindo stack trace
+      } else {
+        console.error(error.message); // Loga apenas a mensagem simples no console
+      }
+      const status = error.message === 'Avaliação não encontrada' ? 404 : 401;
+      res.status(status).json({ message: error.message });
     }
   }
 
-  async listValidUUID(req, res) {
+  async listarAvaliacoes(req, res) {
     try {
-      // Listar UUIDs válidos
-      const { validData, message } = await AvaliacaoModel.listValidUUIDs();
+      const { data_inicial, data_final, status, nome_atendente, nome_empresa } = req.query;
 
-      if (validData.length === 0) {
-        return res.status(200).json(message);
-      }
+      const filtros = {
+        data_inicial,
+        data_final,
+        status,
+        nome_atendente,
+        nome_empresa,
+      };
 
-      return res.status(200).json(validData);
+      // Filtrar e listar as avaliações
+      const avaliacoes = await AvaliacaoModel.listarAvaliacoes(filtros);
 
+      res.status(200).json({ message: 'Avaliações listadas com sucesso', data: avaliacoes });
     } catch (error) {
-      logger.error(`Erro ao listar UUIDs válidos: ${error}`);
-      res.status(500).json('Erro ao listar UUIDs');
+      // Log detalhado apenas para desenvolvedores (em ambiente de desenvolvimento)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(error);  // Loga o erro completo no console, incluindo stack trace
+      } else {
+        console.error(error.message); // Loga apenas a mensagem simples no console
+      }
+      res.status(500).json({ message: 'Erro ao listar avaliações', error: error.message });
     }
   }
 }
 
-export default new AvaliacaoController();  // Exporta a instância já criada
+export default new AvaliacaoController();

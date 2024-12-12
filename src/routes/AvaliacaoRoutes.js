@@ -3,8 +3,13 @@ import AvaliacaoController from '../controllers/AvaliacaoController.js';
 
 const router = express.Router();
 
-router.post('/generate', AvaliacaoController.create);
-router.get('/verify/:uuid', AvaliacaoController.verify);
-router.get('/list-valid-uuids', AvaliacaoController.listValidUUID);
+// Rota para criar avaliação
+router.post('/generate', AvaliacaoController.criarAvaliacao);
+
+// Rota para validar JWT
+router.get('/validate/:uuid', AvaliacaoController.validarJWT);
+
+// Rota para listar avaliações com filtros
+router.get('/list', AvaliacaoController.listarAvaliacoes);
 
 export default router;

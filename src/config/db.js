@@ -1,17 +1,16 @@
 import mysql from 'mysql2/promise';
+import 'dotenv/config';
 
-// URL de conexão MySQL no formato: mysql://USER:PASSWORD@HOST:PORT/DATABASE
-const connectionUrl = process.env.DB_URL_CONNECTION;
+// Substitua pela sua URI no arquivo .env ou diretamente no código
+const DATABASE_URI = process.env.DB_URL_CONNECTION || 'mysql://root:sua_senha@localhost/sistema_avaliacao';
 
-if (!connectionUrl) {
-  throw new Error('DB_URL_CONNECTION não está definida no arquivo .env');
-}
-
-const db = mysql.createPool({
-  uri: connectionUrl,
-  waitForConnections: true,    // Esperar por conexões disponíveis
-  connectionLimit: 10,         // Número máximo de conexões no pool
-  queueLimit: 0                // Número máximo de requisições na fila (0 = ilimitado)
+const pool = mysql.createPool({
+  uri: DATABASE_URI,
+  waitForConnections: true,        // Aguarda conexões quando o limite é atingido
+  connectionLimit: 10,             // Número máximo de conexões no pool
+  queueLimit: 0,                   // Sem limite para a fila de requisições
+  enableKeepAlive: true,           // Mantém as conexões vivas
+  keepAliveInitialDelay: 10000,    // Tempo antes de enviar o primeiro sinal de keep-alive
 });
 
-export default db;
+export default pool;
