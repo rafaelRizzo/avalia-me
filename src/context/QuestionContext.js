@@ -1,10 +1,12 @@
-import React, { createContext, useState, useContext } from 'react';
+"use client"
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const QuestionContext = createContext();
 
 export function QuestionProvider({ children }) {
   const [currentQuestion, setCurrentQuestion] = useState(0); // Pergunta atual
   const [answers, setAnswers] = useState([]); // Respostas das questões
+  const [loading, setLoading] = useState(true); // Estado de carregamento
 
   // Função para passar para a próxima questão
   const nextQuestion = () => {
@@ -20,11 +22,28 @@ export function QuestionProvider({ children }) {
     });
   };
 
+  // Simula um carregamento (por exemplo, validação de UUID)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLoading(false); // Após o carregamento, define o loading como false
+    }, 1000);
+
+    return () => clearTimeout(timeout); // Limpa o timeout quando o componente for desmontado
+  }, []);
+
   return (
-    <QuestionContext.Provider value={{ currentQuestion, nextQuestion, setAnswer, answers }}>
+    <QuestionContext.Provider value={{ currentQuestion, nextQuestion, setAnswer, answers, loading }}>
       {children}
     </QuestionContext.Provider>
   );
 }
 
-export const useQuestion = () => useContext(QuestionContext);
+export const useQuestion = () => {
+  const context = useContext(QuestionContext);
+
+  if (!context) {
+    throw new Error("useQuestion must be used within a QuestionProvider");
+  }
+
+  return context;
+};
