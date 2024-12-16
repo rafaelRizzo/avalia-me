@@ -8,7 +8,6 @@ const useAvaliacao = (uuid, router) => {
     const [answers, setAnswers] = useState([]);
     const [isLastStep, setIsLastStep] = useState(false);
     const [isVerify, setIsVerify] = useState(true);
-    const [gridClass, setGridClass] = useState("grid-cols-1");
     const [observacao, setObservacao] = useState("");
 
     const loadQuestions = useCallback(async () => {
@@ -25,6 +24,7 @@ const useAvaliacao = (uuid, router) => {
         try {
             await axios.get(`${process.env.NEXT_PUBLIC_URL_API}/validate/${uuid}`);
             setIsVerify(false);
+            loadQuestions(); // Carrega as perguntas após a verificação bem-sucedida
         } catch (error) {
             const message = error.response?.data?.message || error;
             const routes = {
@@ -37,7 +37,7 @@ const useAvaliacao = (uuid, router) => {
             };
             router.push(routes[message] || "/error/interno");
         }
-    }, [uuid, router]);
+    }, [uuid, router, loadQuestions]);
 
     const handleAnswer = (answer) => {
         setAnswers((prev) => {
@@ -71,25 +71,14 @@ const useAvaliacao = (uuid, router) => {
     }, [answers, observacao, router, uuid]);
 
     useEffect(() => {
-        if (!isVerify) loadQuestions();
-    }, [isVerify, loadQuestions]);
-
-    useEffect(() => {
         verifyUUID();
     }, [verifyUUID]);
-
-    useEffect(() => {
-        setGridClass(
-            currentQuestion === 0 ? "grid-cols-2" : currentQuestion === 3 ? "grid-cols-1" : "lg:grid-cols-5"
-        );
-    }, [currentQuestion]);
 
     return {
         questions,
         currentQuestion,
         isVerify,
         progress: ((currentQuestion + 1) / questions.length) * 100,
-        gridClass,
         question: questions[currentQuestion],
         handleAnswer,
         handleSubmit,

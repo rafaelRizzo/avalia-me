@@ -11,12 +11,13 @@ export default function Home() {
     const { uuid } = useParams();
     const router = useRouter();
 
+
+
     const {
         questions,
         currentQuestion,
         isVerify,
         progress,
-        gridClass,
         question,
         handleAnswer,
         handleSubmit,
@@ -31,6 +32,20 @@ export default function Home() {
             </div>
         );
     }
+
+    // Calculando a gridClass no page.jsx
+    const gridClass = (() => {
+        switch (currentQuestion) {
+            case 0:
+                return "grid-cols-1 lg:grid-cols-2";
+            case questions.length - 1:
+                return "grid-cols-1";
+            default:
+                return "lg:grid-cols-5";
+        }
+    })();
+
+
 
     return (
         <div className="flex flex-col min-h-screen max-w-4xl mx-auto p-5">
