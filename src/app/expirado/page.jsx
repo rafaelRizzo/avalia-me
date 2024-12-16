@@ -40,7 +40,7 @@ export default function Inexistente() {
 
         <h1>Ops! Avaliação não encontrada</h1>
         <p className="text-muted-foreground text-xs text-center">
-          Geralmente isso ocorre por conta que a avaliação que você entrou já expirou, o tempo de uma avaliação é de até 24 horas!
+          Geralmente isso ocorre por conta que a avaliação que você entrou já expirou ou já foi avaliada, o tempo de uma avaliação é de até 24 horas!
         </p>
 
       </div>

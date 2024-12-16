@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import GridAvaliacao from "@/components/GridAvaliacao";
 import CardAvaliacao from "@/components/GridAvaliacao/CardAvaliacao";
 import axios from "axios";
+import { toast } from "sonner";
 
 export default function Home() {
     const router = useRouter();
@@ -57,8 +58,10 @@ export default function Home() {
     const [currentQuestion, setCurrentQuestion] = useState(0); // Controle das perguntas
     const [answers, setAnswers] = useState([]); // Armazena as respostas
     const [isLastStep, setIsLastStep] = useState(false);
+    const [isVerify, setIsVerify] = useState(true);
     const [gridClass, setGridClass] = useState("grid-cols-1");
     const [observacao, setObservacao] = useState(""); // Para capturar o valor do textarea
+    const [ipClient, setIpClient] = useState(null);
 
     const question = questions[currentQuestion]; // Pergunta atual
     const progress = ((currentQuestion + 1) / questions.length) * 100; // Cálculo do progresso
@@ -77,24 +80,37 @@ export default function Home() {
     };
 
     const handleSubmit = async () => {
+        // Fazendo a requisição para pegar o IP
+        await axios.get('https://api.ipify.org?format=json')
+            .then(response => {
+                setIpClient(response.data.ip); // Armazena o IP do cliente
+            })
+            .catch(error => {
+                console.error("Erro ao pegar o IP: ", error);
+            });
 
-        if (answers) {
-            // Monta o payload com base nas respostas
-            const payload = {
-                nota_atendimento: answers[0], // Resposta da primeira pergunta
-                nota_empresa: answers[1], // Resposta da segunda pergunta
-                ip_client: "2.3.4.5", // Use o IP real do cliente aqui
-                obs: observacao, // Observação do usuário no textarea
-            };
+        if (!ipClient) {
+            toast.error("Não foi possivel identificar o seu ip, por esse motivo sua avaliação não foi enviada!");
+        } else {
+            if (answers) {
+                // Monta o payload com base nas respostas
+                const payload = {
+                    nota_atendimento: answers[0], // Resposta da primeira pergunta
+                    nota_empresa: answers[1], // Resposta da segunda pergunta
+                    ip_client: ipClient,
+                    obs: observacao, // Observação do usuário no textarea
+                };
 
-            try {
-                const response = await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/avaliacao/${uuid}`, payload);
-                console.log(response.data);
-                router.push("/agradecimento")
-            } catch (error) {
-                console.error(error);
+                try {
+                    const response = await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/avaliacao/${uuid}`, payload);
+                    console.log(response.data);
+                    router.push("/agradecimento");
+                } catch (error) {
+                    console.error(error);
+                }
             }
         }
+
     };
 
     useEffect(() => {
@@ -102,10 +118,9 @@ export default function Home() {
             try {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_URL_API}/validate/${uuid}`);
                 console.log(response.data);
-
+                setIsVerify(false);
             } catch (error) {
                 console.error(error.response.data.message || error);
-                // router.push("/error/404")
 
                 // Possiveis retornos do back:
                 // Avaliação não encontrada
@@ -121,24 +136,31 @@ export default function Home() {
                 switch (message) {
                     case 'Avaliação não encontrada':
                         console.log("Avaliação não encontrada.");
+                        router.push("/inexistente");
                         break;
                     case 'UUID avaliado':
                         console.log("UUID já foi avaliado.");
+                        router.push("/expirado");
                         break;
                     case 'UUID expirado':
                         console.log("UUID expirado.");
+                        router.push("/expirado");
                         break;
                     case 'JWT inválido':
                         console.log("JWT inválido.");
+                        router.push("/expirado");
                         break;
                     case 'JWT expirado':
                         console.log("JWT expirado.");
+                        router.push("/expirado");
                         break;
                     case 'JWT expirado ou inválido':
                         console.log("Token expirado ou inválido.");
+                        router.push("/expirado");
                         break;
                     default:
                         console.log("Erro desconhecido:", message);
+                        router.push("/error/404");
                         break;
                 }
             }
@@ -158,55 +180,62 @@ export default function Home() {
     }, [currentQuestion]);
 
     return (
-        <div className="flex flex-col min-h-screen max-w-4xl mx-auto p-5">
-            <div className="flex flex-col flex-1">
-                <div className="h-[50px] flex flex-col justify-center">
-                    <span className="text-sm font-light text-zinc-500 text-right">
-                        {currentQuestion + 1} de {questions.length}
-                    </span>
-                    <Progress value={progress} className="w-full bg-green-100 [&>div]:bg-green-500 my-2" />
+        <>
+            {isVerify ? (
+                <div className="flex flex-col min-h-screen items-center justify-center text-center">
+                    <div className="border min-w-8 min-h-8 rounded-full border-t-zinc-200 border-l-green-500 border-r-green-500 border-b-green-500 animate-spin"></div>
+                    <span>Carregando sua avaliação...</span>
                 </div>
+            ) : (
+                <div className="flex flex-col min-h-screen max-w-4xl mx-auto p-5">
+                    <div className="flex flex-col flex-1">
+                        <div className="h-[50px] flex flex-col justify-center">
+                            <span className="text-sm font-light text-zinc-500 text-right">
+                                {currentQuestion + 1} de {questions.length}
+                            </span>
+                            <Progress value={progress} className="w-full bg-green-100 [&>div]:bg-green-500 my-2" />
+                        </div>
 
-                {/* Usando GridAvaliacao diretamente */}
-                <GridAvaliacao key={question.id} title={question.title} subtitle={question.subtitle}>
-                    <div className={`grid ${gridClass} gap-2 mb-2`}>
-                        {question.answers.length > 0 ? (
-                            question.answers.map((answer, index) => (
-                                <CardAvaliacao
-                                    key={answer.label || index}
-                                    data={answer}
-                                    questions={questions}
-                                    onClick={() => handleAnswer(answer.value)}
-                                    className={`${currentQuestion === 0 ? index === 0 ? "bg-red-500  text-zinc-50 hover:border-red-600" : "bg-green-500  text-zinc-50 hover:border-green-600" : "bg-zinc-100  text-muted-foreground"}`}
-                                >
-                                    <img
-                                        src={answer.imgSrc}
-                                        alt={answer.alt}
-                                        width={80}
-                                        height={80}
-                                        className="transition-transform duration-300 group-hover:scale-110"
-                                    />
-                                </CardAvaliacao>
-                            ))
-                        ) : (
-                            <div className="col-span-full">
-                                <textarea
-                                    placeholder="Digite aqui se gostaria de deixar alguma sugestão ou reclamação... (opcional)"
-                                    maxLength={1000}
-                                    className="min-h-32 border rounded-lg p-2 px-3 focus:border-green-500 focus-visible:border-green-500 focus:outline-none focus:ring-0 outline-none w-full"
-                                    onChange={(e) => setObservacao(e.target.value)} // Atualiza o valor da observação
-                                />
-                                <Button
-                                    className="bg-green-600 hover:bg-green-700 mt-5 text font-semibold text-white"
-                                    onClick={handleSubmit}
-                                >
-                                    Enviar avaliação
-                                </Button>
+                        <GridAvaliacao key={question.id} title={question.title} subtitle={question.subtitle}>
+                            <div className={`grid ${gridClass} gap-2 mb-2`}>
+                                {question.answers.length > 0 ? (
+                                    question.answers.map((answer, index) => (
+                                        <CardAvaliacao
+                                            key={answer.label || index}
+                                            data={answer}
+                                            questions={questions}
+                                            onClick={() => handleAnswer(answer.value)}
+                                        >
+                                            <img
+                                                src={answer.imgSrc}
+                                                alt={answer.alt}
+                                                width={80}
+                                                height={80}
+                                                className="transition-transform duration-300 group-hover:scale-110"
+                                            />
+                                        </CardAvaliacao>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full">
+                                        <textarea
+                                            placeholder="Digite aqui se gostaria de deixar alguma sugestão ou reclamação... (opcional)"
+                                            maxLength={1000}
+                                            className="min-h-32 border rounded-lg p-2 px-3 focus:border-green-500 focus-visible:border-green-500 focus:outline-none focus:ring-0 outline-none w-full"
+                                            onChange={(e) => setObservacao(e.target.value)}
+                                        />
+                                        <Button
+                                            className="bg-green-600 hover:bg-green-700 mt-5 text font-semibold text-white"
+                                            onClick={handleSubmit}
+                                        >
+                                            Enviar avaliação
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </GridAvaliacao>
                     </div>
-                </GridAvaliacao>
-            </div>
-        </div>
+                </div>
+            )}
+        </>
     );
 }
