@@ -1,5 +1,4 @@
 
-// Componente CardAvaliacao atualizado
 export default function CardAvaliacao({ data, children, onClick, className = "" }) {
     return (
         <div
@@ -8,7 +7,7 @@ export default function CardAvaliacao({ data, children, onClick, className = "" 
             onClick={() => onClick(data)}
         >
             {children}
-            <span className="mt-2 text-sm text-muted-foreground">{data?.label}</span>
+            <span className="mt-2 text-sm">{data?.label}</span>
         </div>
     );
 }

@@ -1,10 +1,11 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
 import GridAvaliacao from "@/components/GridAvaliacao";
 import CardAvaliacao from "@/components/GridAvaliacao/CardAvaliacao";
-import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 
 export default function Home() {
@@ -87,7 +88,7 @@ export default function Home() {
             };
 
             try {
-                const response = await axios.put(`http://localhost:3001/avaliacao/${uuid}`, payload);
+                const response = await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/avaliacao/${uuid}`, payload);
                 console.log(response.data);
                 router.push("/agradecimento")
             } catch (error) {
@@ -99,11 +100,12 @@ export default function Home() {
     useEffect(() => {
         const verifyUUID = async () => {
             try {
-                const response = await axios.get(`http://localhost:3001/validate/${uuid}`);
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_URL_API}/validate/${uuid}`);
                 console.log(response.data);
 
             } catch (error) {
                 console.error(error.response.data.message || error);
+                // router.push("/error/404")
 
                 // Possiveis retornos do back:
                 // Avaliação não encontrada
@@ -173,8 +175,9 @@ export default function Home() {
                                 <CardAvaliacao
                                     key={answer.label || index}
                                     data={answer}
+                                    questions={questions}
                                     onClick={() => handleAnswer(answer.value)}
-                                    className={`lg:order-${index} order-${question.answers.length - 1 - index}`}
+                                    className={`${currentQuestion === 0 ? index === 0 ? "bg-red-500  text-zinc-50 hover:border-red-600" : "bg-green-500  text-zinc-50 hover:border-green-600" : "bg-zinc-100  text-muted-foreground"}`}
                                 >
                                     <img
                                         src={answer.imgSrc}
