@@ -11,8 +11,6 @@ export default function Home() {
     const { uuid } = useParams();
     const router = useRouter();
 
-
-
     const {
         questions,
         currentQuestion,
@@ -45,8 +43,6 @@ export default function Home() {
         }
     })();
 
-
-
     return (
         <div className="flex flex-col min-h-screen max-w-4xl mx-auto p-5">
             <div className="flex flex-col flex-1">
@@ -67,13 +63,14 @@ export default function Home() {
                                     data={answer}
                                     questions={questions}
                                     onClick={() => handleAnswer(answer.value)}
+
                                 >
                                     <img
                                         src={answer.imgSrc}
                                         alt={answer.alt}
                                         width={80}
                                         height={80}
-                                        className="transition-transform duration-300 group-hover:scale-110"
+                                        className={`transition-transform duration-300 group-hover:scale-110`}
                                     />
                                 </CardAvaliacao>
                             ))
