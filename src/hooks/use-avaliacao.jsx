@@ -54,12 +54,9 @@ const useAvaliacao = (uuid, router) => {
 
     const handleSubmit = useCallback(async () => {
         try {
-            const { data: { ip } } = await axios.get("https://api.ipify.org?format=json"); // Não usado? ver depois
-            if (!ip) throw new Error("IP não encontrado");
             const payload = {
                 nota_atendimento: answers[0],
                 nota_empresa: answers[1],
-                ip_client: ip,
                 obs: observacao,
             };
             await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/api/avaliacao/${uuid}`, payload);
