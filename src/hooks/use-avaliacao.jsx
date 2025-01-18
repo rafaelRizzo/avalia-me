@@ -22,7 +22,7 @@ const useAvaliacao = (uuid, router) => {
 
     const verifyUUID = useCallback(async () => {
         try {
-            await axios.get(`${process.env.NEXT_PUBLIC_URL_API}/validate/${uuid}`);
+            await axios.get(`${process.env.NEXT_PUBLIC_URL_API}/api/validate/${uuid}`);
             setIsVerify(false);
             loadQuestions(); // Carrega as perguntas após a verificação bem-sucedida
         } catch (error) {
@@ -54,7 +54,7 @@ const useAvaliacao = (uuid, router) => {
 
     const handleSubmit = useCallback(async () => {
         try {
-            const { data: { ip } } = await axios.get("https://api.ipify.org?format=json");
+            const { data: { ip } } = await axios.get("https://api.ipify.org?format=json"); // Não usado? ver depois
             if (!ip) throw new Error("IP não encontrado");
             const payload = {
                 nota_atendimento: answers[0],
@@ -62,7 +62,7 @@ const useAvaliacao = (uuid, router) => {
                 ip_client: ip,
                 obs: observacao,
             };
-            await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/avaliacao/${uuid}`, payload);
+            await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/api/avaliacao/${uuid}`, payload);
             router.push("/agradecimento");
         } catch (error) {
             console.error(error);
