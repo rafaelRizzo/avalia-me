@@ -52,33 +52,19 @@ const useAvaliacao = (uuid, router) => {
         }
     };
 
-    const handleSubmit = useCallback(async () => {
-        try {
-            const payload = {
-                nota_atendimento: answers[0],
-                nota_empresa: answers[1],
-                obs: observacao,
-            };
-            await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/api/avaliacao/${uuid}`, payload);
-            router.push("/agradecimento");
-        } catch (error) {
-            console.error(error);
-            toast.error("Erro ao enviar sua avaliação. Tente novamente mais tarde.");
-        }
-    }, [answers, observacao, router, uuid]);
-
     useEffect(() => {
         verifyUUID();
     }, [verifyUUID]);
 
     return {
+        answers,
         questions,
         currentQuestion,
         isVerify,
         progress: ((currentQuestion + 1) / questions.length) * 100,
         question: questions[currentQuestion],
+        observacao,
         handleAnswer,
-        handleSubmit,
         setObservacao,
     };
 };

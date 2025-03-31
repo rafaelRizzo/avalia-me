@@ -6,19 +6,22 @@ import { useParams, useRouter } from "next/navigation";
 import GridAvaliacao from "@/components/GridAvaliacao";
 import CardAvaliacao from "@/components/GridAvaliacao/CardAvaliacao";
 import useAvaliacao from "@/hooks/use-avaliacao";
+import { toast } from "sonner";
+import axios from "axios";
 
 export default function Home() {
     const { uuid } = useParams();
     const router = useRouter();
 
     const {
+        answers,
         questions,
         currentQuestion,
         isVerify,
         progress,
         question,
+        observacao,
         handleAnswer,
-        handleSubmit,
         setObservacao,
     } = useAvaliacao(uuid, router);
 
@@ -42,6 +45,21 @@ export default function Home() {
                 return "lg:grid-cols-5";
         }
     })();
+
+    const handleSubmit = async () => {
+        try {
+            const payload = {
+                nota_atendimento: answers[0],
+                nota_empresa: answers[1],
+                obs: observacao,
+            };
+            const response = await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/api/avaliacao/${uuid}`, payload);
+            router.push("/agradecimento");
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao enviar sua avaliação. Tente novamente mais tarde.");
+        }
+    }
 
     return (
         <div className="flex flex-col min-h-screen max-w-4xl mx-auto p-5">
