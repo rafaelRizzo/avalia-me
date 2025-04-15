@@ -1,14 +1,15 @@
 version: '3.8'
 
 services:
-  frontend-avaliacao:
-    build: .
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "3102:3102"  # Porta exposta no host e no container
-    env_file:
-      - .env.local  # Carrega o arquivo .env para o contêiner
-    restart: always  # Sempre reiniciar o contêiner caso pare
-
-networks:
-  app_network:
-    driver: bridge  # Usando o driver bridge para a rede do Docker
+      - "3102:3102"  # Map host port 3000 to container port 3000
+    volumes:
+      - .:/app  # Mount the current directory to /app in the container
+      - /app/node_modules  # Exclude node_modules from being overwritten
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
