@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  fronend-avaliacao:
+    build: .
+    container_name: fronend-avaliacao
+    ports:
+      - "3102:3102"  # Porta exposta no host e no container
+    env_file:
+      - .env.local  # Carrega o arquivo .env para o contêiner
+    restart: always  # Sempre reiniciar o contêiner caso pare
+
+networks:
+  app_network:
+    driver: bridge  # Usando o driver bridge para a rede do Docker
