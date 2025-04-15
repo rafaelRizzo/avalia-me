@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  fronend-avaliacao:
+  frontend-avaliacao:
     build: .
-    container_name: fronend-avaliacao
+    container_name: frontend-avaliacao
     ports:
       - "3102:3102"  # Porta exposta no host e no container
     env_file:
