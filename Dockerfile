@@ -1,6 +1,11 @@
 # Use uma imagem base com Node.js
 FROM node:22-alpine
 
+ENV TZ=America/Sao_Paulo
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo "$TZ" > /etc/timezone
+
 # Crie o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
