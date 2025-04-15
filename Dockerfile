@@ -13,5 +13,7 @@ RUN npm install --legacy-peer-deps
 # Copy the rest of the application code
 COPY . .
 
+RUN npm run build
+
 # Command to run the application
 CMD ["npm", "start"]
