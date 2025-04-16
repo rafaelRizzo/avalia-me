@@ -21,6 +21,6 @@ docker rm $CONTAINER_NAME || true
 
 # Sobe o novo container com a nova imagem
 echo "Subindo novo container..."
-docker run -d --restart always -p 3102:3102 --name $CONTAINER_NAME $IMAGE_NAME
+docker run -d --restart always -p 127.0.0.1:3102:3102 --name $CONTAINER_NAME $IMAGE_NAME
 
 echo "Deploy concluído!"
