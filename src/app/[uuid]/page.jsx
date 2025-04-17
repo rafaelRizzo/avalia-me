@@ -49,7 +49,7 @@ export default function Home() {
     const handleSubmit = async () => {
         try {
             const payload = {
-                atendimento_resolvido: answers[0],
+                problema_resolvido: answers[0],
                 nota_atendimento: answers[1],
                 nota_empresa: answers[2],
                 obs: observacao,
