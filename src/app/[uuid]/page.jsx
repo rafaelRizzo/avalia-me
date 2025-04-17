@@ -49,8 +49,9 @@ export default function Home() {
     const handleSubmit = async () => {
         try {
             const payload = {
-                nota_atendimento: answers[0],
-                nota_empresa: answers[1],
+                atendimento_resolvido: answers[0],
+                nota_atendimento: answers[1],
+                nota_empresa: answers[2],
                 obs: observacao,
             };
             const response = await axios.put(`${process.env.NEXT_PUBLIC_URL_API}/api/avaliacao/${uuid}`, payload);
